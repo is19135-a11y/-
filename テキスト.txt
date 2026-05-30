@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>極・英単語クイズ EIGO-MASTER</title>
+<style>
+:root{--bg-dark:#0f111a;--bg-panel:#1a1d2d;--accent-cyan:#00e5ff;--accent-green:#00e676;--accent-red:#ff3d00;--accent-gold:#ffc400;--text-main:#f0f0f5;--text-sub:#a0a4b8;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg-dark);color:var(--text-main);font-family:'Hiragino Sans','Noto Sans JP',sans-serif;-webkit-user-select:none;user-select:none;touch-action:manipulation;overscroll-behavior-y:none;}
+
+/* モーダル */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:2000;justify-content:center;align-items:center;}
+.modal-overlay.on{display:flex;}
+.modal-box{background:var(--bg-panel);border:2px solid var(--accent-cyan);border-radius:15px;padding:25px 20px;max-width:92%;width:400px;box-shadow:0 0 40px rgba(0,229,255,.4);text-align:center;animation:popUp .4s cubic-bezier(.175,.885,.32,1.275);display:flex;flex-direction:column;}
+.modal-box h2{color:var(--accent-cyan);margin-bottom:8px;font-size:1.4rem;}
+.modal-box p{font-size:.9rem;color:var(--text-sub);margin-bottom:16px;}
+@keyframes popUp{0%{transform:scale(.5);opacity:0;}50%{transform:scale(1.05);}100%{transform:scale(1);opacity:1;}}
+
+/* ボタン */
+.primary-btn{padding:14px 30px;font-size:1.1rem;font-weight:900;color:#000;letter-spacing:1px;background:var(--accent-cyan);border:none;border-radius:40px;cursor:pointer;box-shadow:0 6px 0 #009eb3,0 10px 20px rgba(0,0,0,.6);transition:.1s;width:100%;}
+.primary-btn:active{transform:translateY(6px);box-shadow:0 0 0 #009eb3;}
+.primary-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none!important;}
+.primary-btn.green{background:var(--accent-green);box-shadow:0 6px 0 #00b359;}
+.primary-btn.gold{background:var(--accent-gold);box-shadow:0 6px 0 #cc9d00;}
+.primary-btn.red{background:var(--accent-red);box-shadow:0 6px 0 #cc0000;}
+.primary-btn.next{background:var(--accent-gold);box-shadow:0 6px 0 #cc9d00;}
+.primary-btn.gray{background:#2a2e45;box-shadow:0 6px 0 #141724;color:#fff;}
+
+/* サイドバー */
+#sidebar{position:fixed;left:-280px;top:0;width:280px;height:100%;background:var(--bg-panel);border-right:1px solid #2a2e45;overflow-y:auto;z-index:1000;transition:transform .3s ease;box-shadow:2px 0 15px rgba(0,0,0,.5);}
+#sidebar.open{transform:translateX(280px);}
+#sidebar-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:900;opacity:0;transition:opacity .3s;pointer-events:none;}
+#sidebar-overlay.active{pointer-events:auto;opacity:1;display:block;}
+.app-title-sb{padding:20px 15px 15px;font-size:1.3rem;font-weight:900;color:#fff;text-align:center;background:linear-gradient(135deg,#1a1d2d 0%,#0f111a 100%);letter-spacing:2px;cursor:pointer;}
+.app-title-sb span{display:block;font-size:.75rem;color:var(--accent-cyan);letter-spacing:4px;margin-top:4px;}
+#sb-status{background:rgba(0,0,0,.4);padding:14px;text-align:center;border-bottom:1px solid #2a2e45;}
+#sb-rank{font-size:.85rem;color:var(--accent-gold);font-weight:bold;margin-bottom:4px;}
+#sb-pt{font-size:1.4rem;font-weight:900;color:#fff;}
+.section-title{padding:10px 15px;font-size:.8rem;color:var(--text-sub);background:#141724;border-top:1px solid #2a2e45;border-bottom:1px solid #2a2e45;font-weight:bold;}
+.menu-list{list-style:none;}
+.menu-item{padding:13px 15px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;font-size:.9rem;color:#d0d4e5;display:flex;align-items:center;gap:8px;transition:.15s;}
+.menu-item:active{background:rgba(0,229,255,.2);}
+.menu-item.home-btn{color:var(--accent-cyan);font-weight:bold;}
+.menu-item.practice-btn{color:var(--accent-gold);}
+.menu-item.sd-btn{color:var(--accent-red);font-weight:bold;}
+.menu-item.note-btn{color:#ff8a80;}
+.menu-item.review-btn{color:#ff5252;font-weight:bold;}
+
+/* モバイルヘッダー */
+#mobile-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--bg-panel);border-bottom:1px solid #2a2e45;}
+.mobile-title{font-size:1.1rem;font-weight:900;color:var(--accent-cyan);letter-spacing:2px;cursor:pointer;}
+#menu-toggle{background:var(--accent-cyan);color:#000;border:none;padding:7px 14px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:.9rem;}
+
+/* ホーム */
+#home-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(circle at 50% 40%,#1a1d2d 0%,#08090d 80%);padding:20px;text-align:center;}
+.home-badge{background:rgba(0,0,0,.6);padding:8px 20px;border-radius:30px;border:1px solid var(--accent-gold);display:inline-flex;gap:15px;align-items:center;margin-bottom:18px;}
+.home-title{font-size:2.6rem;font-weight:900;color:#fff;text-shadow:0 0 20px var(--accent-cyan),0 4px 10px #000;letter-spacing:4px;margin-bottom:4px;}
+.home-sub{font-size:.95rem;color:var(--accent-cyan);letter-spacing:6px;font-weight:bold;margin-bottom:28px;}
+.magic-btn{width:170px;height:170px;border-radius:50%;background:rgba(0,229,255,.05);border:4px solid var(--accent-cyan);color:#fff;font-size:1.5rem;font-weight:900;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:pointer;box-shadow:0 0 40px rgba(0,229,255,.4),inset 0 0 30px rgba(0,229,255,.2);animation:pulseGlow 2.5s infinite alternate;margin:0 auto 28px;}
+.magic-btn span{font-size:.8rem;color:var(--accent-cyan);margin-top:6px;letter-spacing:3px;}
+.magic-btn:active{transform:scale(.95);}
+@keyframes pulseGlow{0%{box-shadow:0 0 30px rgba(0,229,255,.3),inset 0 0 20px rgba(0,229,255,.2);}100%{box-shadow:0 0 60px rgba(0,229,255,.8),inset 0 0 50px rgba(0,229,255,.5);}}
+.home-menu{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%;max-width:400px;}
+.home-action-btn{background:rgba(255,255,255,.05);border:1px solid #4a4e69;color:#d0d4e5;padding:12px 16px;border-radius:12px;font-size:.95rem;font-weight:bold;cursor:pointer;transition:.2s;flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:8px;}
+.home-action-btn:active{background:rgba(255,255,255,.15);}
+.home-action-btn.sd{border-color:rgba(255,61,0,.5);color:#ff8a80;}
+
+/* タイマー */
+#timer-container{display:none;width:100%;height:12px;background:#1a1d2d;border-radius:6px;overflow:hidden;border:2px solid #2a2e45;margin-bottom:14px;box-shadow:inset 0 2px 5px rgba(0,0,0,.8);}
+#timer-bar{height:100%;width:100%;background:var(--accent-green);transition:width .1s linear,background-color .3s;}
+
+/* クイズ */
+#quiz-screen{display:none;min-height:100vh;}
+.quiz-top{padding:12px 16px;background:var(--bg-panel);border-bottom:1px solid #2a2e45;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.quiz-pt{color:var(--accent-gold);font-size:1rem;font-weight:900;white-space:nowrap;}
+.quiz-mode{font-size:.8rem;color:var(--text-sub);font-weight:bold;white-space:nowrap;}
+.quiz-num{font-size:.85rem;color:var(--text-sub);font-weight:bold;white-space:nowrap;}
+.quiz-body{padding:16px;}
+.q-label{font-size:.75rem;letter-spacing:.12em;color:var(--text-sub);text-align:center;margin-bottom:8px;}
+.q-box{background:#141724;border:2px solid #2a2e45;border-radius:12px;padding:20px 14px;text-align:center;margin-bottom:14px;box-shadow:inset 0 0 20px rgba(0,0,0,.5);}
+.q-txt{font-size:1.3rem;font-weight:900;color:#fff;line-height:1.5;}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.choices-label{font-size:.8rem;color:var(--accent-cyan);font-weight:bold;margin-bottom:6px;letter-spacing:.05em;}
+.choices-usage{grid-template-columns:1fr 1fr;}
+.c-btn{width:100%;padding:15px 10px;background:#1a1d2d;border:2px solid #2a2e45;border-radius:10px;color:var(--text-main);font-size:.9rem;font-weight:700;cursor:pointer;text-align:left;line-height:1.4;transition:.1s;box-shadow:0 4px 0 #0d0f18;}
+.c-btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #0d0f18;}
+.c-btn.ok{border-color:var(--accent-green)!important;background:rgba(0,230,118,.18)!important;color:var(--accent-green)!important;box-shadow:0 0 15px rgba(0,230,118,.3)!important;}
+.c-btn.ng{border-color:var(--accent-red)!important;background:rgba(255,61,0,.15)!important;color:#ff8a80!important;box-shadow:none!important;}
+.c-btn:disabled{cursor:default;}
+.fb-area{min-height:26px;text-align:center;margin-bottom:10px;font-size:1rem;font-weight:bold;}
+.fb-ok{color:var(--accent-green);}
+.fb-ng{color:var(--accent-red);}
+#exp-box{display:none;background:rgba(0,230,118,.12);border:2px solid var(--accent-green);border-radius:10px;padding:14px;margin-top:10px;font-size:.9rem;line-height:1.7;animation:popUp .4s ease;}
+.exp-title{color:var(--accent-green);font-weight:900;margin-bottom:4px;}
+
+/* 苦手ノート */
+.note-item{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#2a2e45;border-radius:8px;margin-bottom:6px;font-weight:bold;font-size:.9rem;}
+.del-btn{background:var(--accent-red);color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:.85rem;}
+.del-btn:active{transform:scale(.9);}
+
+/* 結果 */
+#result-screen{display:none;min-height:100vh;}
+.result-inner{padding:20px;max-width:480px;margin:0 auto;text-align:center;animation:popUp .5s ease;padding-bottom:80px;}
+.result-title{font-size:2rem;font-weight:900;color:var(--accent-gold);text-shadow:0 0 20px rgba(255,196,0,.8),0 4px 10px #000;margin-bottom:8px;}
+.result-ring{width:100px;height:100px;border-radius:50%;border:4px solid var(--accent-cyan);display:inline-flex;flex-direction:column;align-items:center;justify-content:center;margin:12px auto;background:rgba(0,229,255,.06);}
+.result-pct{font-size:1.8rem;font-weight:900;color:var(--accent-cyan);}
+.result-lbl{font-size:.7rem;color:var(--text-sub);}
+.result-msg{font-size:1.1rem;font-weight:bold;color:#fff;margin-bottom:14px;}
+.result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.rs{background:#141724;border:2px solid #2a2e45;border-radius:10px;padding:12px 6px;text-align:center;}
+.rs-n{font-size:1.6rem;font-weight:900;display:block;margin-bottom:2px;}
+.rs-l{font-size:.75rem;color:var(--text-sub);display:block;}
+.rs-ok .rs-n{color:var(--accent-green);}
+.rs-ng .rs-n{color:var(--accent-red);}
+.rs-pt .rs-n{color:var(--accent-cyan);}
+.result-box{background:rgba(0,0,0,.4);padding:14px;border-radius:12px;border:1px solid #2a2e45;margin-bottom:16px;text-align:left;}
+.result-box h3{color:var(--accent-green);margin-bottom:8px;font-size:.95rem;border-bottom:1px solid #2a2e45;padding-bottom:5px;}
+.miss-row{font-size:.85rem;color:#d0d4e5;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.tag-f{color:var(--accent-red);font-size:.75rem;border:1px solid var(--accent-red);padding:1px 5px;border-radius:3px;margin-left:6px;}
+.result-btns{display:flex;gap:8px;}
+
+/* ケンキャラ */
+#ken{position:fixed;bottom:10px;right:10px;display:flex;flex-direction:column;align-items:center;z-index:100;transform:scale(.75);transform-origin:bottom right;pointer-events:none;}
+.ken-bounce{animation:kenJump .4s ease;}
+@keyframes kenJump{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+#ken-speech{background:#fff;color:#000;padding:8px 14px;border-radius:12px;font-weight:bold;font-size:.95rem;margin-bottom:10px;position:relative;box-shadow:0 4px 15px rgba(0,0,0,.5);max-width:220px;text-align:center;border:2px solid #ccc;pointer-events:auto;}
+#ken-speech::after{content:'';position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);border-width:12px 12px 0;border-style:solid;border-color:#fff transparent transparent;}
+#ken-face{width:110px;height:120px;border:3px solid var(--accent-cyan);border-bottom:none;border-radius:18px 18px 0 0;display:flex;justify-content:center;align-items:center;overflow:hidden;background:rgba(0,0,0,.4);}
+
+/* パーティクル */
+#particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;}
+.particle{position:absolute;pointer-events:none;opacity:0;}
+@keyframes fallRotate{0%{transform:translateY(-50px) rotate(0deg) scale(.5);opacity:1;}50%{opacity:1;}100%{transform:translateY(110vh) rotate(var(--rot)) translateX(var(--tx)) scale(1.2);opacity:0;}}
+</style>
+</head>
+<body>
+<div id="particles"></div>
+
+<!-- サイドバー -->
+<div id="sidebar-overlay" onclick="toggleMenu()"></div>
+<nav id="sidebar">
+  <div class="app-title-sb" onclick="goHome();closeMenu()">極・英単語クイズ<span>EIGO-MASTER</span></div>
+  <div id="sb-status">
+    <div id="sb-rank">見習い英語マスター</div>
+    <div id="sb-pt">0 Pt</div>
+  </div>
+  <div class="section-title">🎮 練習モード</div>
+  <ul class="menu-list">
+    <li class="menu-item home-btn" onclick="goHome();closeMenu()">🏠 ホームへ戻る</li>
+    <li class="menu-item practice-btn" onclick="startLevel('easy');closeMenu()">🌱 初級（単語 10問）</li>
+    <li class="menu-item practice-btn" onclick="startLevel('mid');closeMenu()">🌿 中級（フレーズ 10問）</li>
+    <li class="menu-item practice-btn" onclick="startLevel('hard');closeMenu()">🔥 上級（暗誦文 10問）</li>
+    <li class="menu-item sd-btn" onclick="startLevel('sudden');closeMenu()">💀 サドンデス（無限）</li>
+    <li class="menu-item review-btn" id="review-menu" style="display:none" onclick="startReview();closeMenu()">📖 弱点克服モード（0問）</li>
+  </ul>
+  <div class="section-title">📓 苦手ノート</div>
+  <ul class="menu-list">
+    <li class="menu-item note-btn" onclick="openNote();closeMenu()">📓 苦手ノートを確認（<span id="note-count-sb">0</span>問）</li>
+  </ul>
+  <div class="section-title">📚 単語リスト（全46問）</div>
+  <ul class="menu-list" id="word-list-menu"></ul>
+</nav>
+
+<!-- 苦手ノートモーダル -->
+<div class="modal-overlay" id="note-modal">
+  <div class="modal-box">
+    <h2>📓 苦手ノート</h2>
+    <p>間違えた問題を復習しよう！</p>
+    <div id="note-list" style="max-height:260px;overflow-y:auto;text-align:left;"></div>
+    <button class="primary-btn" style="margin-top:16px" onclick="closeNote()">閉じる</button>
+  </div>
+</div>
+
+<!-- 難易度モーダル -->
+<div class="modal-overlay" id="diff-modal">
+  <div class="modal-box">
+    <h2>🧪 難易度を選択</h2>
+    <p>自分のレベルに合わせて挑戦しよう！</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="primary-btn green" onclick="startLevel('easy')">🌱 初級（単語 10問）</button>
+      <button class="primary-btn" onclick="startLevel('mid')">🌿 中級（フレーズ 10問）</button>
+      <button class="primary-btn gold" onclick="startLevel('hard')">🔥 上級（暗誦文 10問）</button>
+      <button class="primary-btn red" onclick="startLevel('sudden')">💀 超上級サドンデス（無限・20秒制限）</button>
+    </div>
+    <button style="margin-top:16px;background:transparent;border:none;color:var(--text-sub);text-decoration:underline;font-size:.9rem;cursor:pointer;" onclick="closeDiff()">戻る</button>
+  </div>
+</div>
+
+<!-- ホーム -->
+<div id="home-screen">
+  <div class="home-badge">
+    <span style="color:var(--accent-gold);font-size:.85rem;font-weight:bold;" id="home-rank">見習い英語マスター</span>
+    <span style="color:#fff;font-size:1.1rem;font-weight:900;" id="home-pt-disp">0 Pt</span>
+  </div>
+  <div class="home-title">EIGO-MASTER</div>
+  <div class="home-sub">極・英単語クイズ</div>
+  <div class="magic-btn" onclick="openDiff()">クイズ開始<span>START</span></div>
+  <div class="home-menu">
+    <div class="home-action-btn sd" onclick="startLevel('sudden')">💀 サドンデス</div>
+    <div class="home-action-btn" onclick="openNote()">📓 苦手ノート</div>
+    <div class="home-action-btn" onclick="openDiff()">📚 レベル選択</div>
+  </div>
+</div>
+
+<!-- クイズ画面 -->
+<div id="quiz-screen">
+  <div id="mobile-header">
+    <div class="mobile-title" onclick="goHome()">EIGO-MASTER</div>
+    <button id="menu-toggle" onclick="toggleMenu()">☰ メニュー</button>
+  </div>
+  <div class="quiz-top">
+    <span class="quiz-pt">★ <span id="q-pt">0</span>Pt</span>
+    <span class="quiz-mode" id="q-mode">初級</span>
+    <span class="quiz-num" id="q-num">1/10</span>
+  </div>
+  <div style="padding:10px 16px 0;">
+    <div id="timer-container"><div id="timer-bar"></div></div>
+  </div>
+  <div class="quiz-body">
+    <div class="q-label" id="q-label">-</div>
+    <div class="q-box"><div class="q-txt" id="q-txt">-</div></div>
+
+    <!-- 英語の選択肢（暗誦文モード）-->
+    <div id="en-choices-wrap" style="display:none">
+      <div class="choices-label" id="choices-label-en">📝 英語を選ぼう</div>
+      <div class="choices" id="en-choices"></div>
+    </div>
+
+    <!-- 用法の選択肢（暗誦文モード）-->
+    <div id="usage-choices-wrap" style="display:none">
+      <div class="choices-label">📖 用法を選ぼう</div>
+      <div class="choices choices-usage" id="usage-choices"></div>
+    </div>
+
+    <!-- 日本語の選択肢（単語・フレーズモード）-->
+    <div id="ja-choices-wrap">
+      <div class="choices" id="ja-choices"></div>
+    </div>
+
+    <div class="fb-area" id="fb"></div>
+    <div id="exp-box"><div class="exp-title">💡 ポイント解説</div><div id="exp-txt"></div></div>
+    <button class="primary-btn next" id="nxt-btn" style="display:none;margin-top:8px;" onclick="nextQ()">次の問題へ →</button>
+  </div>
+</div>
+
+<!-- 結果画面 -->
+<div id="result-screen">
+  <div id="mobile-header2" style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--bg-panel);border-bottom:1px solid #2a2e45;">
+    <div class="mobile-title" onclick="goHome()">EIGO-MASTER</div>
+    <button style="background:var(--accent-cyan);color:#000;border:none;padding:7px 14px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:.9rem;" onclick="toggleMenu()">☰ メニュー</button>
+  </div>
+  <div class="result-inner">
+    <div class="result-title" id="r-title">学習完了！</div>
+    <div class="result-ring"><span class="result-pct" id="r-pct">0%</span><span class="result-lbl">正解率</span></div>
+    <div class="result-msg" id="r-msg">-</div>
+    <div class="result-stats">
+      <div class="rs rs-ok"><span class="rs-n" id="r-ok">0</span><span class="rs-l">正解</span></div>
+      <div class="rs rs-ng"><span class="rs-n" id="r-ng">0</span><span class="rs-l">不正解</span></div>
+      <div class="rs rs-pt"><span class="rs-n" id="r-pt">0</span><span class="rs-l">獲得Pt</span></div>
+    </div>
+    <div class="result-box" id="r-miss-box" style="display:none">
+      <h3>📊 プレイレポート（間違えた問題）</h3>
+      <div id="r-miss-list"></div>
+    </div>
+    <div class="result-btns">
+      <button class="primary-btn gray" style="flex:1" onclick="goHome()">🏠 ホームへ</button>
+      <button class="primary-btn next" style="flex:2" onclick="replayLevel()">🔄 もう一度</button>
+    </div>
+  </div>
+</div>
+
+<!-- ケンキャラ -->
+<div id="ken">
+  <div id="ken-speech">さあ、英語を極めようか！</div>
+  <div id="ken-face"></div>
+</div>
+
+<script>
+var DATA=[
+  {q:"someday",a:"いつか",t:"easy",hint:"some+dayで「ある日」→「いつか」"},
+  {q:"believe",a:"〜を信じる",t:"easy",hint:"believeは他動詞。believe in〜で存在を信じる"},
+  {q:"pleasant",a:"楽しい、愉快な",t:"easy",hint:"pleaseの形容詞形。人・物・場所が主語"},
+  {q:"pleasantly",a:"楽しく",t:"easy",hint:"pleasantの副詞形。-lyをつける"},
+  {q:"true",a:"本当の、真実の",t:"easy",hint:"名詞形はtruth（真実）"},
+  {q:"false",a:"間違った、偽の",t:"easy",hint:"trueの反対。false alarm=誤報"},
+  {q:"a result",a:"結果",t:"easy",hint:"as a result of〜=〜の結果として"},
+  {q:"recycle",a:"再生利用する",t:"easy",hint:"re（再び）+cycle（循環）"},
+  {q:"a chance",a:"機会",t:"easy",hint:"a chance to do=〜する機会"},
+  {q:"a kind of",a:"一種の",t:"easy",hint:"kind of＝sort ofとも言える"},
+  {q:"laugh at him",a:"彼のことを笑う",t:"mid",hint:"laugh atで「〜を笑う」。前置詞atに注目"},
+  {q:"wait for him",a:"彼を待つ",t:"mid",hint:"waitは自動詞なのでforが必要"},
+  {q:"jump over the fence",a:"柵を飛び越える",t:"mid",hint:"overは「〜を越えて」という意味"},
+  {q:"decide to do",a:"〜することを決心する",t:"mid",hint:"decideはto不定詞を目的語にとる"},
+  {q:"begin to do",a:"〜し始める",t:"mid",hint:"begin to do＝begin doingどちらもOK"},
+  {q:"tell him to do",a:"彼に〜するように言う",t:"mid",hint:"tell+人+to doのSVOC構文"},
+  {q:"ask him to do",a:"彼に〜するように頼む",t:"mid",hint:"ask+人+to doのSVOC構文"},
+  {q:"have nothing to do",a:"する(べき)ことがない",t:"mid",hint:"nothingはto不定詞の形容詞的用法で修飾"},
+  {q:"something cold",a:"何か冷たいもの",t:"mid",hint:"形容詞はsomethingの後ろに置く"},
+  {q:"do such a thing",a:"そんなことをする",t:"mid",hint:"such a〜で「そのような〜」"},
+  {q:"say such a thing",a:"そんなことを言う",t:"mid",hint:"sayは発言内容を目的語にとる"},
+  {q:"write in red ink",a:"赤いインクで書く",t:"mid",hint:"inkの色・種類を表すin"},
+  {q:"write with a pen",a:"ペンで書く",t:"mid",hint:"道具はwith、材料・手段はin"},
+  {q:"write on a piece of paper",a:"紙に書く",t:"mid",hint:"紙の上に書くのでon。a piece of=一枚の"},
+  {q:"the same story",a:"同じ話",t:"mid",hint:"the same A as Bで「BとAが同じ」"},
+  {q:"arrive there in time",a:"時間に間に合ってそこに着く",t:"mid",hint:"in time=間に合って。on timeとの違いに注意"},
+  {q:"arrive there on time",a:"時間通りそこに着く",t:"mid",hint:"on time=時間ぴったりに"},
+  {q:"miss the train",a:"電車に乗り遅れる",t:"mid",hint:"missは「逃す・乗り遅れる」の意味もある"},
+  {q:"catch the train",a:"電車に間に合う",t:"mid",hint:"catchは「捕まえる」→「間に合う」"},
+  {q:"go shopping",a:"買い物に行く",t:"mid",hint:"go+動名詞で「〜しに行く」"},
+  {q:"say goodbye to him",a:"彼にさよならを言う",t:"mid",hint:"say goodbye to〜で別れを告げる"},
+  {q:"worry about",a:"〜について心配する",t:"mid",hint:"be worried aboutとも言える"},
+  {q:"see the sight",a:"その光景を見る",t:"mid",hint:"sightはsee（視覚）から来た名詞"},
+  {q:"post the letter",a:"手紙を投函する",t:"mid",hint:"postはイギリス英語。アメリカはmail"},
+  {q:"catch cold",a:"風邪をひく",t:"mid",hint:"catch a coldとも言う"},
+  {q:"polish the shoes",a:"靴を磨く",t:"mid",hint:"polishは「磨く・光沢を出す」"},
+  {q:"carry the baggage",a:"荷物を運ぶ",t:"mid",hint:"baggageは不可算名詞。luggageとも言う"},
+  {q:"many jobs",a:"たくさんの仕事（可算）",t:"mid",hint:"jobは可算名詞なのでmany"},
+  {q:"much work",a:"たくさんの仕事（不可算）",t:"mid",hint:"workは不可算名詞なのでmuch"},
+  {q:"a lot of fun",a:"とても楽しい",t:"mid",hint:"funは不可算名詞。Have fun!=楽しんで"},
+  {q:"He has no house to live in.",a:"彼は住む家がない。",t:"hard",hint:"to live inのinを忘れずに！live in a houseのin"},
+  {q:"Please give me something to drink.",a:"私に何か飲み物をください。",t:"hard",hint:"something to drinkはto不定詞の形容詞的用法"},
+  {q:"Do you have time to visit my office?",a:"あなたには私の事務所を訪ねる時間がありますか？",t:"hard",hint:"time to visitのto不定詞は形容詞的用法"},
+  {q:"She went to Italy to study music.",a:"彼女は音楽を勉強するためにイタリアへ行った。",t:"hard",hint:"to study musicはto不定詞の副詞的用法（目的）"},
+  {q:"She was surprised to see the sight.",a:"彼女はその光景を見て驚いた。",t:"hard",hint:"surprised to seeのto不定詞は副詞的用法（原因）"},
+  {q:"He is foolish to do such a thing.",a:"そんなことをするなんて彼は愚かだ。",t:"hard",hint:"foolish to doのto不定詞は副詞的用法（判断の根拠）"},
+  // 新出単語 287-301
+  {q:"have a cold",a:"風邪をひいている",t:"easy",hint:"catch a cold=風邪をひく / have a cold=ひいている状態"},
+  {q:"drink too much whisky",a:"ウイスキーを飲みすぎる",t:"mid",hint:"too much+不可算名詞で「〜しすぎる」"},
+  {q:"have a break",a:"休憩する",t:"easy",hint:"take a breakとも言える。breakは「休憩」"},
+  {q:"take a taxi",a:"タクシーに乗る",t:"easy",hint:"take+乗り物で「〜に乗る」"},
+  {q:"finish the work in three hours",a:"3時間でその仕事を終える",t:"mid",hint:"in+時間で「〜後に・〜で（所要時間）」"},
+  {q:"be pleased",a:"喜んでいる",t:"easy",hint:"pleaseの受動態。be pleased with〜=〜に喜ぶ"},
+  {q:"be glad",a:"うれしく思う",t:"easy",hint:"be glad to do=〜してうれしい。gladは一時的な気持ち"},
+  {q:"be sorry",a:"残念に思う、気の毒に思う",t:"easy",hint:"I'm sorry.は謝罪だけでなく「残念」の意味も"},
+  {q:"be surprised",a:"驚いている",t:"easy",hint:"surpriseの受動態。be surprised at〜=〜に驚く"},
+  {q:"a fool",a:"愚か者",t:"easy",hint:"foolの形容詞形はfoolish（愚かな）"},
+  {q:"silly",a:"愚かな、馬鹿な",t:"easy",hint:"foolishより口語的。silly mistakeで「くだらないミス」"},
+  {q:"call on him",a:"彼を訪問する",t:"mid",hint:"call on+人=人を訪問する。call at+場所=場所を訪問"},
+  {q:"an envelope",a:"封筒",t:"easy",hint:"発音注意！énvəlòup（エンヴェロウプ）"},
+  {q:"brave",a:"勇敢な",t:"easy",hint:"発音注意！bréiv（ブレイヴ）。名詞形はbravery"},
+  {q:"return",a:"戻る",t:"easy",hint:"re（再び）+turn（向く）→「戻る・返す」"},
+  // 暗誦文 90-93（全副詞・結果）
+  {q:"The boy grew up to be a pianist.",a:"その少年は成長してピアニストになった。",t:"hard",hint:"grew up to beのto不定詞は副詞的用法（結果）"},
+  {q:"My grandmother lived to be ninety.",a:"私の祖母は90歳まで生きた。",t:"hard",hint:"lived to be ninetyのto不定詞は副詞的用法（結果）"},
+  {q:"He tried it only to fail again.",a:"彼はそれを試みたが、また失敗しただけだった。",t:"hard",hint:"only to doで「〜したが結果は…だった」という残念な結果"},
+  {q:"She left her hometown never to return.",a:"彼女は故郷を去り、二度と戻らなかった。",t:"hard",hint:"never to returnのto不定詞は副詞的用法（結果）。never=二度と〜ない"}
+];
+
+var RANKS=[
+  {pt:0,t:"🔰 見習い英語マスター"},{pt:100,t:"✏️ 駆け出し英語マスター"},
+  {pt:300,t:"📖 英語学習のホープ"},{pt:600,t:"🎓 一人前の英語使い"},
+  {pt:1000,t:"🌟 優秀な語学者"},{pt:1500,t:"🧬 真の探求者"},
+  {pt:2500,t:"⚡ 語学の達人"},{pt:4000,t:"👑 EIGO-MASTER"},
+  {pt:6000,t:"🌌 伝説の英語王"}
+];
+var PTS={easy:10,mid:20,hard:30,sudden:25,review:15};
+var totalPt=0,deck=[],qi=0,okCnt=0,ngCnt=0,ep=0,lv='easy',sessionMisses=[];
+var timerIv=null,timeLeft=20,TIME=20,isSudden=false,suddenScore=0;
+var mistakes=[];
+
+function getRank(pt){var r=RANKS[0];for(var i=0;i<RANKS.length;i++){if(pt>=RANKS[i].pt)r=RANKS[i];}return r.t;}
+
+function updateUI(){
+  var r=getRank(totalPt);
+  document.getElementById('sb-rank').textContent=r;
+  document.getElementById('sb-pt').textContent=totalPt+' Pt';
+  document.getElementById('home-rank').textContent=r;
+  document.getElementById('home-pt-disp').textContent=totalPt+' Pt';
+  var mc=mistakes.length;
+  document.getElementById('note-count-sb').textContent=mc;
+  var rm=document.getElementById('review-menu');
+  if(mc>0){rm.style.display='flex';rm.textContent='📖 弱点克服モード（'+mc+'問）';}
+  else rm.style.display='none';
+}
+
+function addMistake(q){
+  var ex=mistakes.find(function(m){return m.q===q;});
+  if(ex) ex.count++;
+  else mistakes.push({q:q,count:1});
+  updateUI();
+}
+function removeMistake(q){
+  mistakes=mistakes.filter(function(m){return m.q!==q;});
+  updateUI();
+}
+
+function show(id){
+  ['home-screen','quiz-screen','result-screen'].forEach(function(s){document.getElementById(s).style.display='none';});
+  var el=document.getElementById(id);
+  el.style.display=(id==='home-screen')?'flex':'block';
+  window.scrollTo(0,0);
+}
+
+function goHome(){stopTimer();show('home-screen');updateUI();setKen('normal','今日はどの問題に挑戦する？');}
+function openDiff(){document.getElementById('diff-modal').classList.add('on');}
+function closeDiff(){document.getElementById('diff-modal').classList.remove('on');}
+function openNote(){
+  var list=document.getElementById('note-list'); list.innerHTML='';
+  if(mistakes.length===0){
+    list.innerHTML='<p style="text-align:center;color:var(--accent-gold);font-weight:bold;padding:20px 0;">🎉 苦手な問題はないよ！すごい！</p>';
+  } else {
+    var sorted=[].concat(mistakes).sort(function(a,b){return b.count-a.count;});
+    sorted.forEach(function(m){
+      var d=document.createElement('div'); d.className='note-item';
+      var safeQ=m.q.replace(/'/g,'&#39;');
+      d.innerHTML='<div><div style="font-size:.85rem;line-height:1.4">'+m.q+'</div><div style="font-size:.75rem;color:var(--accent-red);margin-top:3px;">⚠️ミス:'+m.count+'回</div></div><button class="del-btn" onclick="delNote(\''+safeQ+'\')">✕削除</button>';
+      list.appendChild(d);
+    });
+  }
+  document.getElementById('note-modal').classList.add('on');
+}
+function delNote(q){removeMistake(q);openNote();}
+function closeNote(){document.getElementById('note-modal').classList.remove('on');}
+function toggleMenu(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('active');}
+function closeMenu(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('active');}
+
+function shuf(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=0|Math.random()*(i+1);var t=b[i];b[i]=b[j];b[j]=t;}return b;}
+
+function startLevel(level){
+  closeDiff();closeMenu();
+  lv=level; isSudden=(level==='sudden'); suddenScore=0;
+  var src;
+  if(level==='sudden') src=shuf(DATA.slice());
+  else src=DATA.filter(function(c){return c.t===level;});
+  src=shuf(src);
+  if(level==='easy'||level==='mid') src=src.slice(0,10);
+  if(level==='hard') src=src.slice(0,10);
+  deck=src; qi=0; okCnt=0; ngCnt=0; ep=0; sessionMisses=[];
+  var modeNames={easy:'🌱 初級',mid:'🌿 中級',hard:'🔥 上級',sudden:'💀 サドンデス',review:'📖 弱点克服'};
+  document.getElementById('q-mode').textContent=modeNames[level]||level;
+  show('quiz-screen');
+  renderQ();
+}
+
+function startReview(){
+  if(mistakes.length===0) return;
+  closeMenu();
+  lv='review'; isSudden=false;
+  var qqs=mistakes.map(function(m){return m.q;});
+  deck=shuf(DATA.filter(function(d){return qqs.indexOf(d.q)>=0;}));
+  qi=0; okCnt=0; ngCnt=0; ep=0; sessionMisses=[];
+  document.getElementById('q-mode').textContent='📖 弱点克服';
+  show('quiz-screen'); renderQ();
+}
+
+function replayLevel(){
+  if(lv==='review') startReview();
+  else startLevel(lv);
+}
+
+function startTimer(){
+  stopTimer();
+  if(!isSudden) return;
+  document.getElementById('timer-container').style.display='block';
+  timeLeft=TIME; updateTimerUI();
+  timerIv=setInterval(function(){
+    timeLeft-=.1;
+    if(timeLeft<=0){timeLeft=0;updateTimerUI();clearInterval(timerIv);timeUp();}
+    else updateTimerUI();
+  },100);
+}
+function stopTimer(){clearInterval(timerIv);document.getElementById('timer-container').style.display='none';}
+function updateTimerUI(){
+  var pct=Math.max(0,timeLeft/TIME*100);
+  var bar=document.getElementById('timer-bar');
+  bar.style.width=pct+'%';
+  bar.style.background=pct<25?'var(--accent-red)':pct<50?'var(--accent-gold)':'var(--accent-green)';
+}
+function timeUp(){
+  if(qi>=deck.length) return;
+  ngCnt++; addMistake(deck[qi].q);
+  sessionMisses.push({q:deck[qi].q,type:'時間切れ'});
+  document.getElementById('ja-choices').querySelectorAll('.c-btn').forEach(function(b){b.disabled=true;if(b.dataset.correct==='1')b.className='c-btn ok';});
+  setFb(false,'⌛ 時間切れ！正解: '+deck[qi].a);
+  document.getElementById('nxt-btn').style.display='block';
+  setKen('error','時間切れだ！次は気をつけよう！');
+  showResult(true,'⌛ タイムオーバーで終了！');
+}
+
+// 選択肢を生成して正誤判定するヘルパー
+function makeChoices(gridId, opts, correctVal, onCorrect, onWrong){
+  var g=document.getElementById(gridId); g.innerHTML='';
+  opts.forEach(function(opt){
+    var btn=document.createElement('button'); btn.className='c-btn'; btn.textContent=opt;
+    if(opt===correctVal) btn.dataset.correct='1';
+    (function(b,o){b.addEventListener('click',function(){
+      g.querySelectorAll('.c-btn').forEach(function(x){x.disabled=true;});
+      if(o===correctVal){b.className='c-btn ok';onCorrect(b);}
+      else{b.className='c-btn ng';g.querySelectorAll('.c-btn').forEach(function(x){if(x.dataset.correct==='1')x.className='c-btn ok';});onWrong(b);}
+    });})(btn,opt);
+    g.appendChild(btn);
+  });
+}
+
+// ヒント表示
+function showHint(hint){
+  if(hint){document.getElementById('exp-txt').textContent=hint;document.getElementById('exp-box').style.display='block';}
+}
+
+// 用法をhintから判定
+var USAGES=['副詞的用法・目的','副詞的用法・結果','副詞的用法・原因','副詞的用法・判断の根拠','形容詞的用法','名詞的用法'];
+function getUsage(hint){
+  if(!hint) return '副詞的用法・目的';
+  if(hint.indexOf('結果')>=0) return '副詞的用法・結果';
+  if(hint.indexOf('原因')>=0) return '副詞的用法・原因';
+  if(hint.indexOf('判断')>=0) return '副詞的用法・判断の根拠';
+  if(hint.indexOf('形容詞')>=0) return '形容詞的用法';
+  if(hint.indexOf('名詞')>=0) return '名詞的用法';
+  return '副詞的用法・目的';
+}
+
+function renderQ(){
+  var c=deck[qi], tot=deck.length, isHard=(c.t==='hard');
+  document.getElementById('q-num').textContent=isSudden?'連続:'+suddenScore+'問':'('+(qi+1)+'/'+tot+')';
+  document.getElementById('q-pt').textContent=ep;
+  document.getElementById('fb').textContent='';
+  document.getElementById('fb').className='fb-area';
+  document.getElementById('nxt-btn').style.display='none';
+  document.getElementById('exp-box').style.display='none';
+
+  if(isHard){
+    // ===== 暗誦文モード：日本語を見て①英語を選ぶ ②用法を選ぶ =====
+    document.getElementById('q-label').textContent='日本語 → 英語を選ぼう';
+    document.getElementById('q-txt').textContent=c.a; // 日本語を表示
+    document.getElementById('ja-choices-wrap').style.display='none';
+    document.getElementById('en-choices-wrap').style.display='block';
+    document.getElementById('usage-choices-wrap').style.display='none';
+    document.getElementById('choices-label-en').textContent='📝 英語を選ぼう';
+
+    var enWrongs=shuf(DATA.filter(function(x){return x.t==='hard'&&x.q!==c.q;})).slice(0,3).map(function(x){return x.q;});
+    makeChoices('en-choices', shuf([c.q].concat(enWrongs)), c.q,
+      function(){
+        // 英語正解 → 用法選択へ
+        setFb(true,'英語 OK！次は用法を選ぼう ↓');
+        var correctUsage=getUsage(c.hint||'');
+        var uWrongs=shuf(USAGES.filter(function(u){return u!==correctUsage;})).slice(0,3);
+        document.getElementById('usage-choices-wrap').style.display='block';
+        makeChoices('usage-choices', shuf([correctUsage].concat(uWrongs)), correctUsage,
+          function(){
+            var pt=PTS[lv]||30; ep+=pt; okCnt++;
+            if(isSudden) suddenScore++;
+            setFb(true,'+'+pt+' Pt　英語も用法も完璧！🎉');
+            setKen('success','完璧！英語も用法もバッチリ！');
+            showHint(c.hint);
+            document.getElementById('nxt-btn').style.display='block';
+          },
+          function(){
+            ngCnt++; addMistake(c.q);
+            sessionMisses.push({q:c.q,type:'用法ミス'});
+            setFb(false,'用法が違う… 正解: '+correctUsage);
+            setKen('error','用法を確認しよう！');
+            showHint(c.hint);
+            if(isSudden){showResult(true,'💀 用法ミスで即終了！連続: '+suddenScore+'問');return;}
+            document.getElementById('nxt-btn').style.display='block';
+          }
+        );
+      },
+      function(){
+        // 英語不正解
+        ngCnt++; addMistake(c.q);
+        sessionMisses.push({q:c.q,type:'英文ミス'});
+        setFb(false,'不正解… 正解: '+c.q);
+        setKen('error','惜しかった！解説を確認しよう。');
+        showHint(c.hint);
+        if(isSudden){showResult(true,'💀 不正解で即終了！連続: '+suddenScore+'問');return;}
+        document.getElementById('nxt-btn').style.display='block';
+      }
+    );
+    setKen('think','日本語を見て英語を選ぼう！');
+
+  } else {
+    // ===== 単語・フレーズモード：英語を見て日本語を選ぶ =====
+    document.getElementById('q-label').textContent='英語 → 日本語を選ぼう';
+    document.getElementById('q-txt').textContent=c.q; // 英語を表示
+    document.getElementById('en-choices-wrap').style.display='none';
+    document.getElementById('usage-choices-wrap').style.display='none';
+    document.getElementById('ja-choices-wrap').style.display='block';
+
+    var jaWrongs=shuf(DATA.filter(function(x){return x.a!==c.a;})).slice(0,3).map(function(x){return x.a;});
+    makeChoices('ja-choices', shuf([c.a].concat(jaWrongs)), c.a,
+      function(){
+        var pt=PTS[lv]||PTS[c.t]||20; ep+=pt; okCnt++;
+        if(isSudden) suddenScore++;
+        setFb(true,'+'+pt+' Pt　正解！🎉');
+        setKen('success','正解！さすがだ！');
+        showHint(c.hint);
+        document.getElementById('nxt-btn').style.display='block';
+      },
+      function(){
+        ngCnt++; addMistake(c.q);
+        sessionMisses.push({q:c.q,type:'選択ミス'});
+        setFb(false,'不正解… 正解: '+c.a);
+        setKen('error','惜しかった！解説を確認しよう。');
+        showHint(c.hint);
+        if(isSudden){showResult(true,'💀 不正解で即終了！連続: '+suddenScore+'問');return;}
+        document.getElementById('nxt-btn').style.display='block';
+      }
+    );
+    setKen('think','日本語訳を選んでみよう！');
+  }
+  startTimer();
+}
+
+function setFb(ok,msg){
+  var fb=document.getElementById('fb');
+  fb.textContent=msg; fb.className='fb-area '+(ok?'fb-ok':'fb-ng');
+}
+
+function nextQ(){
+  qi++;
+  if(isSudden&&qi>=deck.length){
+    var next=shuf(DATA.slice()).slice(0,10);
+    deck=deck.concat(next);
+  }
+  if(qi>=deck.length){showResult(false,'');return;}
+  renderQ();
+}
+
+function showResult(isOver,reason){
+  stopTimer();
+  totalPt+=ep;
+  var total=okCnt+ngCnt;
+  var pct=total>0?Math.round(okCnt/total*100):0;
+  document.getElementById('r-pct').textContent=pct+'%';
+  document.getElementById('r-ok').textContent=okCnt;
+  document.getElementById('r-ng').textContent=ngCnt;
+  document.getElementById('r-pt').textContent=ep;
+  if(isSudden&&isOver){
+    document.getElementById('r-title').textContent='タイムアップ！';
+    document.getElementById('r-title').style.color='var(--accent-red)';
+    document.getElementById('r-msg').textContent='💀 '+reason;
+  } else {
+    document.getElementById('r-title').textContent=pct===100?'PERFECT！全問正解！':'学習完了！';
+    document.getElementById('r-title').style.color='var(--accent-gold)';
+    var msg=pct===100?'完璧！全問正解！🏆':pct>=80?'すごい！よくできました！⭐':pct>=60?'なかなか！もう一息💪':'復習してリベンジ！🔥';
+    document.getElementById('r-msg').textContent=msg;
+  }
+  var mbox=document.getElementById('r-miss-box'),mlist=document.getElementById('r-miss-list');
+  if(sessionMisses.length>0){
+    mbox.style.display='block'; mlist.innerHTML='';
+    sessionMisses.forEach(function(m){
+      var d=document.createElement('div'); d.className='miss-row';
+      d.innerHTML='・'+m.q+'<span class="tag-f">'+m.type+'</span>';
+      mlist.appendChild(d);
+    });
+  } else mbox.style.display='none';
+  show('result-screen');
+  updateUI();
+  if(pct>=80&&!isOver) triggerCelebration();
+  if(lv==='review'){
+    var wrongQs=sessionMisses.map(function(m){return m.q;});
+    deck.forEach(function(d){if(wrongQs.indexOf(d.q)<0) removeMistake(d.q);});
+  }
+}
+
+// ケンキャラ SVG
+var kenFaces={
+  normal:'<svg viewBox="0 0 80 90" style="width:100%;height:100%"><ellipse cx="40" cy="45" rx="35" ry="40" fill="#ffcc80"/><circle cx="28" cy="40" r="5" fill="#333"/><circle cx="52" cy="40" r="5" fill="#333"/><path d="M28 58 Q40 68 52 58" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>',
+  think:'<svg viewBox="0 0 80 90" style="width:100%;height:100%"><ellipse cx="40" cy="45" rx="35" ry="40" fill="#ffcc80"/><path d="M24 40 Q28 35 32 40" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M48 40 Q52 35 56 40" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M30 58 Q40 54 50 58" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round"/><text x="58" y="22" font-size="16">🤔</text></svg>',
+  error:'<svg viewBox="0 0 80 90" style="width:100%;height:100%"><ellipse cx="40" cy="45" rx="35" ry="40" fill="#ffcc80"/><line x1="24" y1="36" x2="32" y2="44" stroke="#e53935" stroke-width="2.5" stroke-linecap="round"/><line x1="32" y1="36" x2="24" y2="44" stroke="#e53935" stroke-width="2.5" stroke-linecap="round"/><line x1="48" y1="36" x2="56" y2="44" stroke="#e53935" stroke-width="2.5" stroke-linecap="round"/><line x1="56" y1="36" x2="48" y2="44" stroke="#e53935" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="40" cy="62" rx="7" ry="5" fill="#333"/><text x="58" y="22" font-size="16">😱</text></svg>',
+  success:'<svg viewBox="0 0 80 90" style="width:100%;height:100%"><ellipse cx="40" cy="45" rx="35" ry="40" fill="#ffe082"/><path d="M24 42 Q28 36 32 42" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M48 42 Q52 36 56 42" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M27 55 Q40 70 53 55" stroke="#333" stroke-width="2.5" fill="#ff8a80" stroke-linecap="round"/><circle cx="28" cy="50" r="5" fill="#ff8a80" opacity=".5"/><circle cx="52" cy="50" r="5" fill="#ff8a80" opacity=".5"/><text x="5" y="18" font-size="13">✨</text><text x="58" y="22" font-size="16">🤩</text></svg>'
+};
+function setKen(emotion,msg){
+  var kenEl=document.getElementById('ken');
+  kenEl.classList.remove('ken-bounce');void kenEl.offsetWidth;kenEl.classList.add('ken-bounce');
+  document.getElementById('ken-speech').textContent=msg;
+  document.getElementById('ken-face').innerHTML=kenFaces[emotion]||kenFaces.normal;
+}
+
+function triggerCelebration(){
+  var emojis=['✨','🌟','💎','🔥','📚','🎉','👑'];
+  var colors=['#00e5ff','#ffc400','#00e676','#ff3d00','#ffffff'];
+  var c=document.getElementById('particles'); c.innerHTML='';
+  for(var i=0;i<70;i++){
+    var p=document.createElement('div'); p.className='particle';
+    p.style.left=(Math.random()*100)+'%';
+    if(Math.random()>.3){p.style.width=(Math.random()*10+5)+'px';p.style.height=p.style.width;p.style.backgroundColor=colors[0|Math.random()*colors.length];if(Math.random()>.5)p.style.borderRadius='50%';}
+    else{p.innerText=emojis[0|Math.random()*emojis.length];p.style.fontSize=(Math.random()*15+15)+'px';}
+    p.style.animation='fallRotate '+(Math.random()*2+1.5)+'s cubic-bezier(.25,.46,.45,.94) forwards';
+    p.style.setProperty('--tx',(Math.random()*300-150)+'px');
+    p.style.setProperty('--rot',(Math.random()*720-360)+'deg');
+    p.style.animationDelay=(Math.random()*.5)+'s';
+    c.appendChild(p);
+  }
+  setTimeout(function(){c.innerHTML='';},4000);
+}
+
+// サイドバー単語リスト
+(function(){
+  var list=document.getElementById('word-list-menu');
+  DATA.forEach(function(d){
+    var li=document.createElement('li'); li.className='menu-item';
+    li.style.fontSize='.8rem';
+    var icon=d.t==='hard'?'🔥':d.t==='mid'?'🌿':'🌱';
+    li.textContent=icon+' '+d.q;
+    list.appendChild(li);
+  });
+})();
+
+goHome();
+setKen('normal','今日はどの問題に挑戦する？');
+</script>
+</body>
+</html>
